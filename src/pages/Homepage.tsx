@@ -652,7 +652,7 @@ export const Homepage: React.FC = () => {
                 <div>
                   <h3 className="font-medium text-gray-900 mb-2">1. Include the Script</h3>
                   <p>Add the autodialer widget script to your HTML page:</p>
-                  <pre className="bg-gray-100 p-2 rounded mt-2 text-xs">
+                  <pre className="bg-gray-100 p-2 rounded mt-2 text-xs whitespace-pre-wrap break-words">
                     <code>{`<script src="${import.meta.env.VITE_BASE_URL}/autodialer-widget.js"></script>`}</code>
                   </pre>
                 </div>
