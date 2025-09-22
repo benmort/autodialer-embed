@@ -186,7 +186,7 @@ npm install
 # Create .env file with your backend URL and Twilio token
 echo "VITE_AUTODIALER_API_URL=http://localhost:5001" > .env
 echo "VITE_TWILIO_TOKEN=your-twilio-token" >> .env
-echo "VITE_CDN_URL=https://your-cdn-url.com/autodialer-widget.js" >> .env
+echo "VITE_BASE_URL=https://autodialer-emebd.vercel.app" >> .env
 
 npm run dev
 ```
@@ -198,7 +198,7 @@ Create a `.env` file in the project root with the following variables:
 ```bash
 # Frontend-safe variables (exposed to browser)
 VITE_AUTODIALER_API_URL=http://localhost:5001
-VITE_CDN_URL=https://your-cdn-url.com/autodialer-widget.js
+VITE_BASE_URL=https://autodialer-emebd.vercel.app
 VITE_EMBED_TOKEN=embed-demo-token-12345
 
 # Pusher configuration (frontend-safe)

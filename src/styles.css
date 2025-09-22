@@ -1,0 +1,130 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom styles for the embeddable widget */
+autodialer-widget {
+  display: block;
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --autodialer-primary: #6b7280;
+  --autodialer-secondary: #9ca3af;
+  --autodialer-background: #ffffff;
+  --autodialer-text: #111827;
+}
+
+/* Ensure the widget doesn't inherit unwanted styles */
+autodialer-widget * {
+  box-sizing: border-box;
+}
+
+/* Loading state styles */
+.autodialer-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.autodialer-loading .spinner {
+  width: 2rem;
+  height: 2rem;
+  border: 2px solid #e5e7eb;
+  border-top: 2px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Error state styles */
+.autodialer-error {
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 0.375rem;
+  padding: 1rem;
+  text-align: center;
+}
+
+.autodialer-error .error-icon {
+  width: 2rem;
+  height: 2rem;
+  background-color: #fee2e2;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 0.5rem;
+}
+
+.autodialer-error .error-message {
+  color: #b91c1c;
+  font-size: 0.875rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  autodialer-widget {
+    max-width: 100%;
+    margin: 0;
+  }
+}
+
+/* Focus styles for accessibility */
+autodialer-widget input:focus,
+autodialer-widget button:focus {
+  outline: 2px solid var(--autodialer-primary);
+  outline-offset: 2px;
+}
+
+/* Color customization classes */
+.autodialer-primary {
+  background-color: var(--autodialer-primary) !important;
+  color: white !important;
+}
+
+.autodialer-primary:hover {
+  background-color: var(--autodialer-secondary) !important;
+}
+
+.autodialer-secondary {
+  background-color: var(--autodialer-secondary) !important;
+  color: white !important;
+}
+
+.autodialer-text {
+  color: var(--autodialer-text) !important;
+}
+
+.autodialer-background {
+  background-color: var(--autodialer-background) !important;
+}
+
+/* Animation for status changes */
+.autodialer-status-transition {
+  transition: all 0.3s ease-in-out;
+}
+
+/* Custom scrollbar for any scrollable content */
+autodialer-widget ::-webkit-scrollbar {
+  width: 6px;
+}
+
+autodialer-widget ::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+autodialer-widget ::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+autodialer-widget ::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}

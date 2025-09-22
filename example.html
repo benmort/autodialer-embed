@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autodialer Embed Demo</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 2rem;
+            background-color: #f9fafb;
+        }
+        .demo-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            padding: 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        .demo-section {
+            margin-bottom: 3rem;
+        }
+        .demo-section h2 {
+            color: #1f2937;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 0.5rem;
+        }
+        .code-block {
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            padding: 1rem;
+            margin: 1rem 0;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.875rem;
+            overflow-x: auto;
+        }
+        .widget-container {
+            border: 2px dashed #d1d5db;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <h1>Autodialer Embed Demo</h1>
+        
+        <div class="demo-section">
+            <h2>1. Simple HTML Tag Embedding</h2>
+            <p>Embed the dialer using a simple HTML tag with data attributes:</p>
+            
+            <div class="code-block">
+&lt;autodialer-widget 
+    tenant="demo" 
+    token="your-token" 
+    backend-url="https://your-backend.com"
+    campaign-id="your-campaign-id"
+    primary-color="#3b82f6"
+    secondary-color="#1d4ed8"
+    twilio-token="your-twilio-token"
+    phone="+1234567890"
+    name="John Doe"
+    email="john@example.com"&gt;
+&lt;/autodialer-widget&gt;
+            </div>
+            
+            <div class="widget-container">
+                <autodialer-widget 
+                    tenant="demo" 
+                    token="demo-token" 
+                    backend-url="https://demo-backend.com"
+                    campaign-id="demo-campaign"
+                    primary-color="#6b7280"
+                    secondary-color="#9ca3af"
+                    twilio-token="demo-twilio-token">
+                </autodialer-widget>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>2. JavaScript API Embedding</h2>
+            <p>Embed the dialer using JavaScript API:</p>
+            
+            <div class="code-block">
+&lt;script src="https://your-cdn.com/autodialer-embed.js"&gt;&lt;/script&gt;
+&lt;div id="dialer-container"&gt;&lt;/div&gt;
+&lt;script&gt;
+const service = window.AutodialerEmbed.init({
+    tenant: 'demo',
+    token: 'your-token',
+    backendUrl: 'https://your-backend.com',
+    campaignId: 'your-campaign-id',
+    colors: {
+        primary: '#3b82f6',
+        secondary: '#1d4ed8'
+    },
+    pusherConfigs: [{
+        appId: 'your-app-id',
+        cluster: 'us2',
+        key: 'your-pusher-key'
+    }],
+    twilioToken: 'your-twilio-token',
+    callerChannelId: 'unique-channel-id'
+}, 'dialer-container');
+&lt;/script&gt;
+            </div>
+            
+            <div class="widget-container" id="js-dialer-container">
+                <!-- Will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>3. Event Handling</h2>
+            <p>Listen to widget events:</p>
+            
+            <div class="code-block">
+&lt;autodialer-widget 
+    tenant="demo" 
+    token="demo-token" 
+    backend-url="https://demo-backend.com"
+    campaign-id="your-campaign"
+    primary-color="#059669"
+    secondary-color="#047857"
+    on-status-change="handleStatusChange"
+    on-error="handleError"
+    on-call-start="handleCallStart"
+    on-call-end="handleCallEnd"&gt;
+&lt;/autodialer-widget&gt;
+
+&lt;script&gt;
+function handleStatusChange(data) {
+    console.log('Status changed:', data.status);
+}
+
+function handleError(data) {
+    console.error('Error:', data.error);
+    alert('Error: ' + data.error);
+}
+
+function handleCallStart(data) {
+    console.log('Call started:', data.data);
+}
+
+function handleCallEnd(data) {
+    console.log('Call ended');
+}
+&lt;/script&gt;
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>4. Custom Styling</h2>
+            <p>The widget supports custom colors and can be styled with CSS:</p>
+            
+            <div class="code-block">
+&lt;autodialer-widget 
+    tenant="demo"
+    token="demo-token"
+    backend-url="https://demo-backend.com"
+    campaign-id="demo-campaign"
+    primary-color="#dc2626"
+    secondary-color="#b91c1c"
+    background-color="#fef2f2"
+    text-color="#991b1b"&gt;
+&lt;/autodialer-widget&gt;
+
+&lt;style&gt;
+autodialer-widget {
+    max-width: 500px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+&lt;/style&gt;
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>5. Integration with Your Backend</h2>
+            <p>Make sure your robotargeter backend supports the following endpoints:</p>
+            
+            <div class="code-block">
+POST /pusher/auth
+- Authenticates Pusher channels
+- Headers: x-aws-waf-token (optional)
+- Query params: tenant, token, app_id
+
+WebSocket /twilio/voice
+- Handles Twilio Voice SDK connections
+- Expects caller data and Twilio tokens
+- Campaign ID is included in caller data
+            </div>
+        </div>
+    </div>
+
+    <!-- Load the embeddable script -->
+    <script type="module" src="/src/index.ts"></script>
+    
+    <script>
+        // Demo JavaScript API usage
+        if (window.AutodialerEmbed) {
+            try {
+                const service = window.AutodialerEmbed.init({
+                    tenant: 'demo',
+                    token: 'demo-token',
+                    backendUrl: 'https://demo-backend.com',
+                    campaignId: 'demo-campaign',
+                    colors: {
+                        primary: '#059669',
+                        secondary: '#047857'
+                    },
+                    pusherConfigs: [{
+                        appId: 'demo-app',
+                        cluster: 'us2',
+                        key: 'demo-key'
+                    }],
+                    twilioToken: 'demo-twilio-token',
+                    callerChannelId: 'demo-channel-' + Date.now()
+                }, 'js-dialer-container');
+                
+                console.log('JavaScript API service initialized:', service);
+            } catch (error) {
+                console.error('Failed to initialize JavaScript API:', error);
+                document.getElementById('js-dialer-container').innerHTML = 
+                    '<div class="autodialer-error"><div class="error-icon">⚠️</div><div class="error-message">Failed to initialize: ' + error.message + '</div></div>';
+            }
+        }
+
+        // Event handlers for demo
+        window.handleStatusChange = function(data) {
+            console.log('Status changed:', data.status);
+        };
+
+        window.handleError = function(data) {
+            console.error('Error:', data.error);
+        };
+
+        window.handleCallStart = function(data) {
+            console.log('Call started:', data.data);
+        };
+
+        window.handleCallEnd = function(data) {
+            console.log('Call ended');
+        };
+    </script>
+</body>
+</html>
