@@ -660,7 +660,7 @@ export const Homepage: React.FC = () => {
                 <div>
                   <h3 className="font-medium text-gray-900 mb-2">2. Add the Widget</h3>
                   <p>Place the autodialer-widget element where you want it to appear:</p>
-                  <pre className="bg-gray-100 p-2 rounded mt-2 text-xs overflow-x-auto">
+                  <pre className="bg-gray-100 p-2 rounded mt-2 text-xs whitespace-pre-wrap break-words">
                     <code>{'<autodialer-widget\n  tenant="your-tenant"\n  token="your-token"\n  campaign-id="your-campaign"\n  primary-color="#your-color">\n</autodialer-widget>'}</code>
                   </pre>
                 </div>
