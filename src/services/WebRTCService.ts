@@ -95,6 +95,7 @@ export class WebRTCService {
           email: data.email,
           callerChannelId: data.caller_channel_id,
           pusherAppId: pusherConfig.appId,
+          call_type: 'webrtc',
           ...(data.referralCode !== undefined ? { referralCode: data.referralCode } : {}),
         },
       });
