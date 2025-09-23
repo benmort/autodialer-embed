@@ -46,30 +46,3 @@ window.AutodialerEmbed = {
   }
 };
 
-// Auto-initialize any existing autodialer-widget elements
-document.addEventListener('DOMContentLoaded', () => {
-  const widgets = document.querySelectorAll('autodialer-widget');
-  widgets.forEach(widget => {
-    // Widget will auto-initialize via connectedCallback
-    console.log('Found autodialer-widget:', widget);
-  });
-});
-
-// Also check for widgets added dynamically
-const observer = new MutationObserver((mutations) => {
-  mutations.forEach((mutation) => {
-    mutation.addedNodes.forEach((node) => {
-      if (node.nodeType === Node.ELEMENT_NODE) {
-        const element = node as Element;
-        if (element.tagName === 'AUTODIALER-WIDGET') {
-          console.log('Dynamic autodialer-widget detected:', element);
-        }
-      }
-    });
-  });
-});
-
-observer.observe(document.body, {
-  childList: true,
-  subtree: true
-});
