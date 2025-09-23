@@ -246,11 +246,6 @@ export const Homepage: React.FC = () => {
     console.log('Call ended:', event.detail);
   };
 
-  // Debug: Log environment variables
-  console.log('VITE_EMBED_TOKEN:', import.meta.env.VITE_EMBED_TOKEN);
-  console.log('All env vars:', import.meta.env);
-  console.log('Token in template:', `${import.meta.env.VITE_EMBED_TOKEN}`);
-  console.log('Is token undefined?', import.meta.env.VITE_EMBED_TOKEN === undefined);
 
   return (
     <div className="min-h-screen bg-gray-50 relative">

@@ -138,6 +138,24 @@ export class PusherService {
     });
   }
 
+  async sendMessage(eventName: string, data: any): Promise<void> {
+    if (!this.channel) {
+      console.error('Pusher channel not connected');
+      throw new Error('Pusher channel not connected');
+    }
+
+    console.log('Pusher channel state:', this.channel.state);
+    console.log('Sending Pusher message:', `client-${eventName}`, data);
+
+    try {
+      await this.channel.trigger(`client-${eventName}`, data);
+      console.log('Pusher message sent successfully');
+    } catch (error) {
+      console.error('Failed to send Pusher message:', error);
+      throw error;
+    }
+  }
+
   disconnect(): void {
     if (this.pusherTimeoutId) {
       clearTimeout(this.pusherTimeoutId);

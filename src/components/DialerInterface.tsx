@@ -10,6 +10,7 @@ interface FormConfig {
   showEmail?: boolean;
   connectButtonText?: string;
   cancelButtonText?: string;
+  callEndMessage?: string;
   showFullForm?: boolean;
 }
 
@@ -31,11 +32,11 @@ const generateColorStyles = (colors?: AutodialerColors): React.CSSProperties => 
   } as React.CSSProperties;
   
   if (colors.background) {
-    styles['--autodialer-background'] = colors.background;
+    (styles as any)['--autodialer-background'] = colors.background;
   }
   
   if (colors.text) {
-    styles['--autodialer-text'] = colors.text;
+    (styles as any)['--autodialer-text'] = colors.text;
   }
   
   return styles;
@@ -56,15 +57,19 @@ export const DialerInterface: React.FC<DialerInterfaceProps> = ({
     caller_channel_id: initialData.caller_channel_id || '',
     referralCode: initialData.referralCode
   });
+  const [dialpadInput, setDialpadInput] = useState<string>('');
+  const [responseHistory, setResponseHistory] = useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [lastSubmissionStatus, setLastSubmissionStatus] = useState<'success' | 'error' | null>(null);
 
   const colorStyles = generateColorStyles(colors);
 
   useEffect(() => {
-    const handleStatusChange = (status: AutodialerState['status']) => {
+    const handleStatusChange = (_status: AutodialerState['status']) => {
       setState(service.getState());
     };
 
-    const handleError = (error: string) => {
+    const handleError = (_error: string) => {
       setState(service.getState());
     };
 
@@ -77,6 +82,35 @@ export const DialerInterface: React.FC<DialerInterfaceProps> = ({
       service.setEvents({});
     };
   }, [service]);
+
+  // Keyboard support for dialpad
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (state.status !== 'in-call') return;
+      
+      const key = event.key;
+      
+      // Allow numbers, *, #, and special keys
+      if (/[0-9*#]/.test(key)) {
+        event.preventDefault();
+        handleDialpadInput(key);
+      } else if (key === 'Backspace') {
+        event.preventDefault();
+        handleDialpadBackspace();
+      } else if (key === 'Enter') {
+        event.preventDefault();
+        handleSubmitResponse();
+      } else if (key === 'Escape') {
+        event.preventDefault();
+        handleDialpadClear();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyPress);
+    return () => {
+      document.removeEventListener('keydown', handleKeyPress);
+    };
+  }, [state.status]); // Removed dialpadInput dependency to avoid stale closures
 
   const handleConnect = async () => {
     // If showFullForm is false, skip validation since no fields are shown
@@ -122,9 +156,175 @@ export const DialerInterface: React.FC<DialerInterfaceProps> = ({
     service.endCall();
   };
 
+  const handleResetToIdle = () => {
+    setState({ status: 'idle' });
+    setResponseHistory([]);
+    setDialpadInput('');
+    setLastSubmissionStatus(null);
+  };
+
+  const handleDialpadInput = (digit: string) => {
+    setDialpadInput(prev => prev + digit);
+  };
+
+  const handleDialpadClear = () => {
+    setDialpadInput('');
+  };
+
+  const handleDialpadBackspace = () => {
+    setDialpadInput(prev => prev.slice(0, -1));
+  };
+
+  const handleSubmitResponse = async () => {
+    console.log('handleSubmitResponse called:', { dialpadInput, isSubmitting, disabled });
+    
+    if (dialpadInput.trim() && !isSubmitting) {
+      setIsSubmitting(true);
+      setLastSubmissionStatus(null);
+      
+      try {
+        console.log('Attempting to send response:', dialpadInput);
+        await service.sendResponse(dialpadInput);
+        console.log('Response submitted successfully:', dialpadInput);
+        
+        // Add to response history
+        setResponseHistory(prev => [...prev, dialpadInput]);
+        setDialpadInput('');
+        setLastSubmissionStatus('success');
+        
+        // Clear success status after 2 seconds
+        setTimeout(() => setLastSubmissionStatus(null), 2000);
+      } catch (error) {
+        console.error('Failed to submit response:', error);
+        setLastSubmissionStatus('error');
+        
+        // Clear error status after 3 seconds
+        setTimeout(() => setLastSubmissionStatus(null), 3000);
+      } finally {
+        setIsSubmitting(false);
+      }
+    } else {
+      console.log('Submit blocked:', { hasInput: !!dialpadInput.trim(), isSubmitting, disabled });
+    }
+  };
+
+  const renderDialpad = () => {
+    const dialpadNumbers = [
+      ['1', '2', '3'],
+      ['4', '5', '6'],
+      ['7', '8', '9'],
+      ['*', '0', '#']
+    ];
+
+    return (
+      <div className="mt-4">
+        {/* Response History */}
+        {responseHistory.length > 0 && (
+          <div className="mb-3">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Previous Responses ({responseHistory.length}):
+            </label>
+            <div className="bg-gray-50 border border-gray-200 rounded-md p-2 max-h-20 overflow-y-auto">
+              <div className="flex flex-wrap gap-1">
+                {responseHistory.map((response, index) => (
+                  <span
+                    key={index}
+                    className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded"
+                  >
+                    {response}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Status Messages */}
+        {lastSubmissionStatus && (
+          <div className={`mb-3 p-2 rounded-md text-sm text-center ${
+            lastSubmissionStatus === 'success' 
+              ? 'bg-green-100 text-green-800' 
+              : 'bg-red-100 text-red-800'
+          }`}>
+            {lastSubmissionStatus === 'success' ? '✓ Response sent successfully' : '✗ Failed to send response'}
+          </div>
+        )}
+
+        <div className="mb-3">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Enter Response:
+          </label>
+          <div className="flex items-center space-x-2">
+            <input
+              type="text"
+              value={dialpadInput}
+              readOnly
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-center text-lg font-mono"
+              placeholder="Enter numbers..."
+            />
+            <button
+              onClick={handleDialpadBackspace}
+              disabled={!dialpadInput || disabled || isSubmitting}
+              className="px-3 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              ⌫
+            </button>
+            <button
+              onClick={handleDialpadClear}
+              disabled={!dialpadInput || disabled || isSubmitting}
+              className="px-3 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-3 gap-2 mb-3">
+          {dialpadNumbers.map((row, rowIndex) => (
+            row.map((digit, colIndex) => (
+              <button
+                key={`${rowIndex}-${colIndex}`}
+                onClick={() => handleDialpadInput(digit)}
+                disabled={disabled}
+                className="px-4 py-3 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 active:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed text-lg font-semibold"
+              >
+                {digit}
+              </button>
+            ))
+          ))}
+        </div>
+        
+        <button
+          onClick={handleSubmitResponse}
+          disabled={!dialpadInput.trim() || disabled || isSubmitting}
+          className="w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+        >
+          {isSubmitting ? (
+            <>
+              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Sending...
+            </>
+          ) : (
+            'Submit Response'
+          )}
+        </button>
+      </div>
+    );
+  };
+
   const renderStatus = () => {
     switch (state.status) {
       case 'idle':
+        // Check if we should show the form message
+        const shouldShowFormMessage = formConfig?.showFullForm !== false && (
+          formConfig?.showPhone !== false || 
+          formConfig?.showName !== false || 
+          formConfig?.showEmail !== false
+        );
+        
         return (
           <div className="text-center p-6">
             <div className="mb-4">
@@ -134,7 +334,9 @@ export const DialerInterface: React.FC<DialerInterfaceProps> = ({
                 </svg>
               </div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">Ready to Call</h3>
-              <p className="text-gray-600">Fill in your information to start making calls</p>
+              {shouldShowFormMessage && (
+                <p className="text-gray-600">Fill in your information to start making calls</p>
+              )}
             </div>
           </div>
         );
@@ -165,42 +367,67 @@ export const DialerInterface: React.FC<DialerInterfaceProps> = ({
                 </svg>
               </div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">Connected</h3>
-              <p className="text-gray-600">You're ready to make calls</p>
+              <p className="text-gray-600">Ready to start calling</p>
             </div>
             <button
               onClick={handleConnect}
               disabled={disabled}
               className="w-full text-white py-2 px-4 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
-                backgroundColor: colors?.primary || '#6b7280',
-                ':hover': {
-                  backgroundColor: colors?.secondary || '#9ca3af'
-                }
+                backgroundColor: colors?.primary || '#6b7280'
               }}
             >
-              {formConfig?.connectButtonText || 'Start Calling'}
+              {formConfig?.connectButtonText || 'Start Call'}
             </button>
           </div>
         );
       
       case 'in-call':
         return (
-          <div className="text-center p-6">
-            <div className="mb-4">
-              <div className="w-16 h-16 bg-red-100 rounded-full mx-auto mb-4 flex items-center justify-center animate-pulse">
-                <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="p-6">
+            <div className="text-center mb-4">
+              <div className="w-16 h-16 bg-green-100 rounded-full mx-auto mb-4 flex items-center justify-center animate-pulse">
+                <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                 </svg>
               </div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">Call in Progress</h3>
               <p className="text-gray-600">You are currently on a call</p>
             </div>
+            
+            {renderDialpad()}
+            
             <button
               onClick={handleDisconnect}
               disabled={disabled}
-              className="w-full bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full mt-4 bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {formConfig?.cancelButtonText || 'End Call'}
+            </button>
+          </div>
+        );
+      
+      case 'call-ended':
+        return (
+          <div className="text-center p-6">
+            <div className="mb-4">
+              <div className="w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+                <svg className="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Call Ended</h3>
+              <p className="text-gray-600 mb-4">{formConfig?.callEndMessage || 'Thank you for your call. Have a great day!'}</p>
+            </div>
+            <button
+              onClick={handleResetToIdle}
+              disabled={disabled}
+              className="w-full text-white py-2 px-4 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                backgroundColor: colors?.primary || '#6b7280'
+              }}
+            >
+              Make Another Call
             </button>
           </div>
         );

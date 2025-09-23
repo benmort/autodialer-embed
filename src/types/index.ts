@@ -32,7 +32,7 @@ export interface CallerData {
 }
 
 export interface AutodialerState {
-  status: 'idle' | 'connecting' | 'connected' | 'in-call' | 'error';
+  status: 'idle' | 'connecting' | 'connected' | 'in-call' | 'call-ended' | 'error';
   error?: string;
   callData?: CallerData;
 }
@@ -71,6 +71,7 @@ export interface AutodialerElement extends HTMLElement {
   showEmail?: boolean;
   connectButtonText?: string;
   cancelButtonText?: string;
+  callEndMessage?: string;
   showFullForm?: boolean;
   'on-status-change'?: string;
   'on-error'?: string;

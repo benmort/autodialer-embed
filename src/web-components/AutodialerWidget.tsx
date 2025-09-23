@@ -31,6 +31,7 @@ export class AutodialerWidget extends HTMLElement {
   get showEmail() { return this.hasAttribute('show-email'); }
   get connectButtonText() { return this.getAttribute('connect-button-text') || undefined; }
   get cancelButtonText() { return this.getAttribute('cancel-button-text') || undefined; }
+  get callEndMessage() { return this.getAttribute('call-end-message') || undefined; }
   get showFullForm() { return this.hasAttribute('show-full-form'); }
   get 'on-status-change'() { return this.getAttribute('on-status-change') || undefined; }
   get 'on-error'() { return this.getAttribute('on-error') || undefined; }
@@ -57,6 +58,7 @@ export class AutodialerWidget extends HTMLElement {
       'show-email',
       'connect-button-text',
       'cancel-button-text',
+      'call-end-message',
       'show-full-form',
       'on-status-change',
       'on-error',
@@ -79,7 +81,7 @@ export class AutodialerWidget extends HTMLElement {
       if (['tenant', 'token', 'campaign-id'].includes(name)) {
         this.cleanup();
         this.initialize();
-      } else if (['primary-color', 'secondary-color', 'background-color', 'text-color', 'form-title', 'form-description', 'show-phone', 'show-name', 'show-email', 'connect-button-text', 'cancel-button-text', 'show-full-form'].includes(name)) {
+      } else if (['primary-color', 'secondary-color', 'background-color', 'text-color', 'form-title', 'form-description', 'show-phone', 'show-name', 'show-email', 'connect-button-text', 'cancel-button-text', 'call-end-message', 'show-full-form'].includes(name)) {
         // Just re-render for color and form config changes
         this.render();
       }
@@ -102,13 +104,6 @@ export class AutodialerWidget extends HTMLElement {
   private getConfig(): AutodialerConfig {
     const element = this as unknown as AutodialerElement;
     
-    // Debug: Log all attributes
-    console.log('AutodialerWidget attributes:', {
-      tenant: element.tenant,
-      token: element.token,
-      campaignId: element.campaignId,
-      allAttributes: Array.from(this.attributes).map(attr => `${attr.name}="${attr.value}"`)
-    });
     
     if (!element.tenant || !element.token) {
       throw new Error('Missing required attributes: tenant, token');
@@ -221,6 +216,7 @@ export class AutodialerWidget extends HTMLElement {
           showEmail: element.showEmail,
           connectButtonText: element.connectButtonText,
           cancelButtonText: element.cancelButtonText,
+          callEndMessage: element.callEndMessage,
           showFullForm: (element as any).showFullForm
         } as any
       })
