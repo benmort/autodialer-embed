@@ -90,6 +90,11 @@ export const Homepage: React.FC = () => {
     showEmail: boolean;
     connectButtonText: string;
     cancelButtonText: string;
+    // Layout customization options
+    shadowBorder?: boolean;
+    stretchToFit?: boolean;
+    maxWidth?: number;
+    minWidth?: number;
   }>({
     showFullForm: false,
     title: 'Caller Information',
@@ -98,7 +103,11 @@ export const Homepage: React.FC = () => {
     showName: true,
     showEmail: true,
     connectButtonText: 'Connect',
-    cancelButtonText: 'Cancel'
+    cancelButtonText: 'Cancel',
+    shadowBorder: true,
+    stretchToFit: false,
+    maxWidth: 400,
+    minWidth: 300
   });
   const [embedCode, setEmbedCode] = useState<string>('');
   const [showEmbedCode, setShowEmbedCode] = useState<boolean>(false);
@@ -230,20 +239,20 @@ export const Homepage: React.FC = () => {
   };
 
   // Event handlers for interactive preview
-  const handleStatusChange = (event: CustomEvent) => {
-    console.log('Status changed:', event.detail.status);
+  const handleStatusChange = (_event: CustomEvent) => {
+    // Status changed
   };
 
   const handleError = (event: CustomEvent) => {
     console.error('Error:', event.detail.error);
   };
 
-  const handleCallStart = (event: CustomEvent) => {
-    console.log('Call started:', event.detail);
+  const handleCallStart = (_event: CustomEvent) => {
+    // Call started
   };
 
-  const handleCallEnd = (event: CustomEvent) => {
-    console.log('Call ended:', event.detail);
+  const handleCallEnd = (_event: CustomEvent) => {
+    // Call ended
   };
 
 
@@ -394,6 +403,73 @@ export const Homepage: React.FC = () => {
                                 className="text-sm text-gray-600 font-mono px-2 py-1 border border-gray-300 rounded w-24"
                               />
                             </div>
+                          </div>
+                        </div>
+
+                        {/* Layout Customization */}
+                        <div className="space-y-4 pt-4 border-t">
+                          <h4 className="text-md font-medium text-gray-900 mb-3">Layout Options</h4>
+                          
+                          <div className="space-y-4">
+                            {/* Shadow Border Toggle */}
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm font-medium text-gray-700">Shadow Border Style</span>
+                              <label className="relative inline-flex items-center cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={formConfig.shadowBorder ?? true}
+                                  onChange={(e) => setFormConfig(prev => ({ ...prev, shadowBorder: e.target.checked }))}
+                                  className="sr-only peer"
+                                />
+                                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                              </label>
+                            </div>
+
+                            {/* Stretch to Fit Toggle */}
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm font-medium text-gray-700">Stretch to Fit Container</span>
+                              <label className="relative inline-flex items-center cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={formConfig.stretchToFit ?? false}
+                                  onChange={(e) => setFormConfig(prev => ({ ...prev, stretchToFit: e.target.checked }))}
+                                  className="sr-only peer"
+                                />
+                                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                              </label>
+                            </div>
+
+                            {/* Width Options - Only show when stretch to fit is off */}
+                            {!(formConfig.stretchToFit ?? false) && (
+                              <div className="space-y-3">
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Max Width (px)
+                                  </label>
+                                  <input
+                                    type="number"
+                                    value={formConfig.maxWidth ?? 400}
+                                    onChange={(e) => setFormConfig(prev => ({ ...prev, maxWidth: Number(e.target.value) }))}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    min="200"
+                                    max="800"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Min Width (px)
+                                  </label>
+                                  <input
+                                    type="number"
+                                    value={formConfig.minWidth ?? 300}
+                                    onChange={(e) => setFormConfig(prev => ({ ...prev, minWidth: Number(e.target.value) }))}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    min="200"
+                                    max="600"
+                                  />
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>
 
@@ -627,6 +703,10 @@ export const Homepage: React.FC = () => {
                         ${formConfig.connectButtonText ? `connect-button-text="${formConfig.connectButtonText}"` : ''}
                         ${formConfig.cancelButtonText ? `cancel-button-text="${formConfig.cancelButtonText}"` : ''}
                         ${formConfig.showFullForm ? 'show-full-form' : ''}
+                        ${formConfig.shadowBorder !== undefined ? `shadow-border="${formConfig.shadowBorder}"` : ''}
+                        ${formConfig.stretchToFit !== undefined ? `stretch-to-fit="${formConfig.stretchToFit}"` : ''}
+                        ${formConfig.maxWidth ? `max-width="${formConfig.maxWidth}"` : ''}
+                        ${formConfig.minWidth ? `min-width="${formConfig.minWidth}"` : ''}
                         ${!showInteractivePreview ? 'disabled' : ''}
                         ${showInteractivePreview ? 'on-status-change="handleStatusChange" on-error="handleError" on-call-start="handleCallStart" on-call-end="handleCallEnd"' : ''}>
                       </autodialer-widget>`
@@ -686,7 +766,7 @@ export const Homepage: React.FC = () => {
                       <pre className="bg-gray-100 p-2 rounded text-xs">
                         <code>
                           {`function handleStatusChange(event) {
-                            console.log('Status changed:', event.detail.status);
+                            // Status changed
                           }
 
                           function handleError(event) {

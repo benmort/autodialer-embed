@@ -3,10 +3,15 @@ import { PusherConfig, CallerData, AutodialerConfig } from '../types';
 
 export class WebRTCService {
   private device: Device | null = null;
+  private call: any = null;
   private twilioDestroyed = false;
   private twilioConnectionAlreadyLost = false;
 
   constructor(private config: AutodialerConfig) {}
+
+  private getLogLevel(): "DEBUG" | "ERROR" {
+    return process.env.NODE_ENV === 'development' ? "DEBUG" : "ERROR";
+  }
 
   async initialize(): Promise<void> {
     if (!Device.isSupported) {
@@ -20,8 +25,27 @@ export class WebRTCService {
     const token = await this.fetchTwilioToken(identity);
     
     this.device = new Device(token, {
-      logLevel: "DEBUG", // Use string like dialer-ui project
-      // Remove all other parameters - let SDK auto-detect and use defaults
+      logLevel: this.getLogLevel(),
+      sounds: {
+        // Custom incoming call sound (entry sound)
+        incoming: `${import.meta.env.VITE_AUTODIALER_API_URL}/audio/didge1.wav`,
+        // You can also customize other sounds
+        outgoing: `${import.meta.env.VITE_AUTODIALER_API_URL}/audio/didge1.wav`,
+        disconnect: `${import.meta.env.VITE_AUTODIALER_API_URL}/audio/didge2.wav`,
+        // Disable DTMF sounds (set to empty strings to disable)
+        dtmf0: `${import.meta.env.VITE_AUTODIALER_API_URL}/audio/silence.wav`,
+        dtmf1: `${import.meta.env.VITE_AUTODIALER_API_URL}/audio/silence.wav`,
+        dtmf2: `${import.meta.env.VITE_AUTODIALER_API_URL}/audio/silence.wav`,
+        dtmf3: `${import.meta.env.VITE_AUTODIALER_API_URL}/audio/silence.wav`,
+        dtmf4: `${import.meta.env.VITE_AUTODIALER_API_URL}/audio/silence.wav`,
+        dtmf5: `${import.meta.env.VITE_AUTODIALER_API_URL}/audio/silence.wav`,
+        dtmf6: `${import.meta.env.VITE_AUTODIALER_API_URL}/audio/silence.wav`,
+        dtmf7: `${import.meta.env.VITE_AUTODIALER_API_URL}/audio/silence.wav`,
+        dtmf8: `${import.meta.env.VITE_AUTODIALER_API_URL}/audio/silence.wav`,
+        dtmf9: `${import.meta.env.VITE_AUTODIALER_API_URL}/audio/silence.wav`,
+        dtmfs: `${import.meta.env.VITE_AUTODIALER_API_URL}/audio/silence.wav`, // DTMF star (*) sound
+        dtmfh: `${import.meta.env.VITE_AUTODIALER_API_URL}/audio/silence.wav`  // DTMF hash (#) sound
+      }
     });
 
     this.device.on('error', this.handleTwilioError.bind(this));
@@ -29,8 +53,6 @@ export class WebRTCService {
 
   private async fetchTwilioToken(identity: string): Promise<string> {
     try {
-      console.log(`🔄 Fetching Twilio token for identity: ${identity}`);
-      
       const response = await fetch(`${this.config.backendUrl}/api/token`, {
         method: 'POST',
         headers: {
@@ -54,22 +76,11 @@ export class WebRTCService {
         throw new Error('No token received from backend');
       }
       
-      console.log(`✅ Successfully obtained Twilio token`);
-      console.log(`🔍 Token length: ${data.token.length}`);
-      console.log(`🔍 Token preview: ${data.token.substring(0, 50)}...`);
-      
       // Decode and validate the token structure
       try {
         const parts = data.token.split('.');
         if (parts.length === 3) {
-          const payload = JSON.parse(atob(parts[1]));
-          console.log(`🔍 Token payload:`, {
-            iss: payload.iss,
-            sub: payload.sub,
-            iat: payload.iat,
-            exp: payload.exp,
-            grants: payload.grants
-          });
+          // Token structure validated
         }
       } catch (e) {
         console.warn('⚠️ Could not decode token for debugging:', e);
@@ -88,7 +99,7 @@ export class WebRTCService {
     }
 
     try {
-      const call = await this.device.connect({
+      this.call = await this.device.connect({
         params: {
           From: data.phone,
           name: data.name,
@@ -96,13 +107,30 @@ export class WebRTCService {
           callerChannelId: data.caller_channel_id,
           pusherAppId: pusherConfig.appId,
           call_type: 'webrtc',
+          ...(data.tenant ? { tenant: data.tenant } : {}),
+          ...(data.token ? { token: data.token } : {}),
           ...(data.referralCode !== undefined ? { referralCode: data.referralCode } : {}),
-        },
+        }
       });
 
-      call.on('error', this.handleTwilioError.bind(this));
+      this.call.on('error', this.handleTwilioError.bind(this));
     } catch (error) {
       console.error('Failed to connect call:', error);
+      throw error;
+    }
+  }
+
+  async sendDTMF(digits: string): Promise<void> {
+    if (!this.call) {
+      throw new Error('No active call to send DTMF tones');
+    }
+
+    try {
+      // Use Twilio Voice SDK's built-in sendDigits method
+      this.call.sendDigits(digits);
+      
+    } catch (error) {
+      console.error('❌ Failed to send DTMF tones:', error);
       throw error;
     }
   }
@@ -139,6 +167,7 @@ export class WebRTCService {
       this.device.destroy();
       this.device = null;
     }
+    this.call = null;
   }
 
   // Event handlers - will be set by the main service

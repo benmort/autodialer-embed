@@ -17,7 +17,6 @@ export class PusherService {
     );
 
     if (isDemoMode) {
-      console.log('Demo mode: Skipping Pusher connection');
       // Return a mock config for demo purposes
       const mockConfig = this.config.pusherConfigs[0];
       this.startMockSubscriptions();
@@ -98,7 +97,6 @@ export class PusherService {
   }
 
   private startMockSubscriptions(): void {
-    console.log('Demo mode: Starting mock Pusher subscriptions');
     // In demo mode, we don't need real Pusher connections
     // Just simulate a successful connection
   }
@@ -144,12 +142,8 @@ export class PusherService {
       throw new Error('Pusher channel not connected');
     }
 
-    console.log('Pusher channel state:', this.channel.state);
-    console.log('Sending Pusher message:', `client-${eventName}`, data);
-
     try {
       await this.channel.trigger(`client-${eventName}`, data);
-      console.log('Pusher message sent successfully');
     } catch (error) {
       console.error('Failed to send Pusher message:', error);
       throw error;

@@ -14,6 +14,11 @@ export interface AutodialerConfig {
   referralCode?: string;
   campaignId?: string;
   colors?: AutodialerColors;
+  // Layout options
+  shadowBorder?: boolean;
+  stretchToFit?: boolean;
+  maxWidth?: number;
+  minWidth?: number;
 }
 
 export interface PusherConfig {
@@ -29,12 +34,26 @@ export interface CallerData {
   caller_channel_id: string;
   referralCode?: string;
   campaignId?: string;
+  tenant?: string;
+  token?: string;
+  call_type?: string;
+}
+
+export interface CallLogEntry {
+  id: string;
+  timestamp: Date;
+  eventType: 'call_started' | 'call_connected' | 'call_ended' | 'call_disconnected' | 'call_error' | 
+              'call_redirect' | 'call_redirecting' | 'call_connected_conference' | 'call_target_hangup' | 'call_electoral_postcode' | 'call_electoral_lookup' | 'call_electoral_target' | 
+              'call_select_electorate' | 'call_survey' | 'call_survey_result';
+  message: string;
+  data?: any;
 }
 
 export interface AutodialerState {
   status: 'idle' | 'connecting' | 'connected' | 'in-call' | 'call-ended' | 'error';
   error?: string;
   callData?: CallerData;
+  callLog: CallLogEntry[];
 }
 
 export interface AutodialerEvents {
@@ -42,6 +61,7 @@ export interface AutodialerEvents {
   onError?: (error: string) => void;
   onCallStart?: (data: CallerData) => void;
   onCallEnd?: () => void;
+  onCallLogUpdate?: (callLog: CallLogEntry[]) => void;
 }
 
 export interface AutodialerColors {
@@ -49,6 +69,23 @@ export interface AutodialerColors {
   secondary: string;
   background?: string;
   text?: string;
+}
+
+export interface FormConfig {
+  title?: string;
+  description?: string;
+  showPhone?: boolean;
+  showName?: boolean;
+  showEmail?: boolean;
+  connectButtonText?: string;
+  cancelButtonText?: string;
+  callEndMessage?: string;
+  showFullForm?: boolean;
+  // Layout options
+  shadowBorder?: boolean;
+  stretchToFit?: boolean;
+  maxWidth?: number;
+  minWidth?: number;
 }
 
 // Web Component attributes
@@ -73,6 +110,11 @@ export interface AutodialerElement extends HTMLElement {
   cancelButtonText?: string;
   callEndMessage?: string;
   showFullForm?: boolean;
+  // Layout options
+  shadowBorder?: boolean;
+  stretchToFit?: boolean;
+  maxWidth?: number;
+  minWidth?: number;
   'on-status-change'?: string;
   'on-error'?: string;
   'on-call-start'?: string;

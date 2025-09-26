@@ -33,6 +33,10 @@ export class AutodialerWidget extends HTMLElement {
   get cancelButtonText() { return this.getAttribute('cancel-button-text') || undefined; }
   get callEndMessage() { return this.getAttribute('call-end-message') || undefined; }
   get showFullForm() { return this.hasAttribute('show-full-form'); }
+  get shadowBorder() { return this.getAttribute('shadow-border') === 'true'; }
+  get stretchToFit() { return this.getAttribute('stretch-to-fit') === 'true'; }
+  get maxWidth() { return this.getAttribute('max-width') ? parseInt(this.getAttribute('max-width')!) : undefined; }
+  get minWidth() { return this.getAttribute('min-width') ? parseInt(this.getAttribute('min-width')!) : undefined; }
   get 'on-status-change'() { return this.getAttribute('on-status-change') || undefined; }
   get 'on-error'() { return this.getAttribute('on-error') || undefined; }
   get 'on-call-start'() { return this.getAttribute('on-call-start') || undefined; }
@@ -60,6 +64,10 @@ export class AutodialerWidget extends HTMLElement {
       'cancel-button-text',
       'call-end-message',
       'show-full-form',
+      'shadow-border',
+      'stretch-to-fit',
+      'max-width',
+      'min-width',
       'on-status-change',
       'on-error',
       'on-call-start',
@@ -81,9 +89,12 @@ export class AutodialerWidget extends HTMLElement {
       if (['tenant', 'token', 'campaign-id'].includes(name)) {
         this.cleanup();
         this.initialize();
-      } else if (['primary-color', 'secondary-color', 'background-color', 'text-color', 'form-title', 'form-description', 'show-phone', 'show-name', 'show-email', 'connect-button-text', 'cancel-button-text', 'call-end-message', 'show-full-form'].includes(name)) {
-        // Just re-render for color and form config changes
+      } else if (['form-title', 'form-description', 'show-phone', 'show-name', 'show-email', 'connect-button-text', 'cancel-button-text', 'call-end-message', 'show-full-form'].includes(name)) {
+        // Just re-render for form config changes
         this.render();
+      } else if (['primary-color', 'secondary-color', 'background-color', 'text-color', 'shadow-border', 'stretch-to-fit', 'max-width', 'min-width'].includes(name)) {
+        // Reapply styles for color and layout changes
+        this.applyLayoutStyles();
       }
     }
   }
@@ -93,12 +104,53 @@ export class AutodialerWidget extends HTMLElement {
       const config = this.getConfig();
       this.service = new AutodialerService(config);
       
+      this.applyLayoutStyles();
       this.render();
       this.setupEventListeners();
     } catch (error) {
       console.error('Failed to initialize AutodialerWidget:', error);
       this.renderError(error instanceof Error ? error.message : 'Initialization failed');
     }
+  }
+
+  private applyLayoutStyles() {
+    const element = this as unknown as AutodialerElement;
+    
+    // Apply shadow border
+    if (element.shadowBorder) {
+      this.classList.add('shadow-lg');
+    } else {
+      this.classList.remove('shadow-lg');
+    }
+    
+    // Apply stretch to fit
+    if (element.stretchToFit) {
+      this.style.width = '100%';
+      this.style.maxWidth = 'none';
+      this.style.minWidth = 'none';
+    } else {
+      this.style.width = '';
+      this.style.maxWidth = element.maxWidth ? `${element.maxWidth}px` : '';
+      this.style.minWidth = element.minWidth ? `${element.minWidth}px` : '';
+    }
+    
+    // Apply color styles
+    if (element.primaryColor) {
+      this.style.setProperty('--autodialer-primary', element.primaryColor);
+    }
+    if (element.secondaryColor) {
+      this.style.setProperty('--autodialer-secondary', element.secondaryColor);
+    }
+    if (element.backgroundColor) {
+      this.style.setProperty('--autodialer-background', element.backgroundColor);
+    }
+    if (element.textColor) {
+      this.style.setProperty('--autodialer-text', element.textColor);
+    }
+    
+    // Add base styles
+    this.style.display = 'block';
+    this.style.margin = '0 auto';
   }
 
   private getConfig(): AutodialerConfig {
@@ -143,7 +195,12 @@ export class AutodialerWidget extends HTMLElement {
         secondary: element.secondaryColor || '#9ca3af',
         background: element.backgroundColor,
         text: element.textColor
-      }
+      },
+      // Layout options
+      shadowBorder: element.shadowBorder,
+      stretchToFit: element.stretchToFit,
+      maxWidth: element.maxWidth,
+      minWidth: element.minWidth
     };
   }
 
